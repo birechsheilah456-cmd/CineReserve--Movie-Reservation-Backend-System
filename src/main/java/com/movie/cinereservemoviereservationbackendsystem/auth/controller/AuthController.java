@@ -19,7 +19,6 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity<UserResponse> register(@RequestBody RegisterRequest request) {
         UserResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
