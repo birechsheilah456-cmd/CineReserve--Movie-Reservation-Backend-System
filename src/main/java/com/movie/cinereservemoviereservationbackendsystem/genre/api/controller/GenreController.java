@@ -1,6 +1,5 @@
 package com.movie.cinereservemoviereservationbackendsystem.genre.api.controller;
 
-import com.movie.cinereservemoviereservationbackendsystem.common.response.ApiResponse;
 import com.movie.cinereservemoviereservationbackendsystem.genre.api.dto.GenreRequest;
 import com.movie.cinereservemoviereservationbackendsystem.genre.api.dto.GenreResponse;
 import com.movie.cinereservemoviereservationbackendsystem.genre.service.GenreService;
@@ -21,35 +20,34 @@ public class GenreController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'CINEMA_MANAGER')")
-    public ResponseEntity<ApiResponse<GenreResponse>> createGenre(@RequestBody GenreRequest request) {
+    public ResponseEntity<GenreResponse> createGenre(@RequestBody GenreRequest request) {
         GenreResponse response = genreService.createGenre(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Genre created successfully", response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'CINEMA_MANAGER')")
-    public ResponseEntity<ApiResponse<GenreResponse>> updateGenre(@PathVariable Long id, @RequestBody GenreRequest request) {
+    public ResponseEntity<GenreResponse> updateGenre(@PathVariable Long id, @RequestBody GenreRequest request) {
         GenreResponse response = genreService.updateGenre(id, request);
-        return ResponseEntity.ok(ApiResponse.success("Genre updated successfully", response));
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'CINEMA_MANAGER')")
-    public ResponseEntity<ApiResponse<Void>> deleteGenre(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteGenre(@PathVariable Long id) {
         genreService.deleteGenre(id);
-        return ResponseEntity.ok(ApiResponse.success("Genre deleted successfully", null));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<GenreResponse>> getGenreById(@PathVariable Long id) {
+    public ResponseEntity<GenreResponse> getGenreById(@PathVariable Long id) {
         GenreResponse response = genreService.getGenreById(id);
-        return ResponseEntity.ok(ApiResponse.success("Genre retrieved successfully", response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<GenreResponse>>> getAllGenres() {
+    public ResponseEntity<List<GenreResponse>> getAllGenres() {
         List<GenreResponse> response = genreService.getAllGenres();
-        return ResponseEntity.ok(ApiResponse.success("Genres retrieved successfully", response));
+        return ResponseEntity.ok(response);
     }
 }
