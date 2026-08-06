@@ -7,6 +7,4 @@ import java.util.List;
 public class ReservationRequest {
     private Long showtimeId;
     private List<Long> seatIds;
-    private String idempotencyKey;
-    private Double totalPrice;
 }

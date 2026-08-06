@@ -9,11 +9,14 @@ import com.movie.cinereservemoviereservationbackendsystem.reservation.model.Rese
 import com.movie.cinereservemoviereservationbackendsystem.reservation.model.ReservationSeat;
 import com.movie.cinereservemoviereservationbackendsystem.reservation.repository.ReservationRepository;
 import com.movie.cinereservemoviereservationbackendsystem.reservation.service.ReservationService;
+import com.movie.cinereservemoviereservationbackendsystem.showtime.model.Showtime;
+import com.movie.cinereservemoviereservationbackendsystem.showtime.repository.ShowtimeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,27 +24,33 @@ import java.util.stream.Collectors;
 public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final ShowtimeRepository showtimeRepository;
 
     @Override
     @Transactional
     public ReservationResponse createReservation(Long userId, ReservationRequest request) {
-        // Idempotency check: return existing reservation if key matches
-        if (request.getIdempotencyKey() != null && !request.getIdempotencyKey().isBlank()) {
-            var existing = reservationRepository.findByIdempotencyKey(request.getIdempotencyKey());
-            if (existing.isPresent()) {
-                return mapToResponse(existing.get());
-            }
+        if (request.getShowtimeId() == null) {
+            throw new BusinessRuleViolationException("Showtime ID is required.");
         }
-
         if (request.getSeatIds() == null || request.getSeatIds().isEmpty()) {
             throw new BusinessRuleViolationException("A reservation must include at least one seat.");
         }
 
+        // Fetch showtime to get base pricing
+        Showtime showtime = showtimeRepository.findById(request.getShowtimeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Showtime not found with ID: " + request.getShowtimeId()));
+
+        // Automatically calculate total price: (Showtime price * number of seats)
+        Double calculatedTotalPrice = showtime.getPrice() * request.getSeatIds().size();
+
+        // Automatically generate a unique idempotency key for this transaction
+        String generatedIdempotencyKey = UUID.randomUUID().toString();
+
         Reservation reservation = Reservation.builder()
                 .userId(userId)
-                .showtimeId(request.getShowtimeId())
-                .idempotencyKey(request.getIdempotencyKey())
-                .totalPrice(request.getTotalPrice() != null ? request.getTotalPrice() : 0.0)
+                .showtimeId(showtime.getId())
+                .idempotencyKey(generatedIdempotencyKey)
+                .totalPrice(calculatedTotalPrice)
                 .status(ReservationStatus.CONFIRMED)
                 .build();
 
