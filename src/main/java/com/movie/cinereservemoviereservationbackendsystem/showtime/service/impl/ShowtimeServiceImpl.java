@@ -12,9 +12,7 @@ import com.movie.cinereservemoviereservationbackendsystem.showtime.api.dto.Showt
 import com.movie.cinereservemoviereservationbackendsystem.showtime.model.Showtime;
 import com.movie.cinereservemoviereservationbackendsystem.showtime.repository.ShowtimeRepository;
 import com.movie.cinereservemoviereservationbackendsystem.showtime.service.ShowtimeService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +32,9 @@ public class ShowtimeServiceImpl implements ShowtimeService {
 
     @Override
     @Transactional
-    public ShowtimeResponse createShowtime(@Valid @MonotonicNonNull ShowtimeRequest request) {
+    public ShowtimeResponse createShowtime(ShowtimeRequest request) {
+        validateRequestFields(request);
+
         if (request.getStartTime().isBefore(LocalDateTime.now())) {
             throw new BusinessRuleViolationException("Cannot create a showtime in the past.");
         }
@@ -64,6 +64,8 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     @Override
     @Transactional
     public ShowtimeResponse updateShowtime(Long id, ShowtimeRequest request) {
+        validateRequestFields(request);
+
         Showtime showtime = showtimeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Showtime not found with ID: " + id));
 
@@ -108,6 +110,13 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     }
 
     @Override
+    public List<ShowtimeResponse> getAllShowtimes() {
+        return showtimeRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public ShowtimeAvailabilityResponse getShowtimesByDate(LocalDate date) {
         LocalDateTime dayStart = date.atStartOfDay();
         LocalDateTime dayEnd = date.atTime(LocalTime.MAX);
@@ -129,6 +138,27 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    private void validateRequestFields(ShowtimeRequest request) {
+        if (request == null) {
+            throw new BusinessRuleViolationException("Request body cannot be null.");
+        }
+        if (request.getMovieId() == null) {
+            throw new BusinessRuleViolationException("Movie ID is required.");
+        }
+        if (request.getAuditoriumId() == null) {
+            throw new BusinessRuleViolationException("Auditorium ID is required.");
+        }
+        if (request.getStartTime() == null) {
+            throw new BusinessRuleViolationException("Start time is required.");
+        }
+        if (request.getPrice() == null) {
+            throw new BusinessRuleViolationException("Price is required.");
+        }
+        if (request.getPrice() <= 0) {
+            throw new BusinessRuleViolationException("Price must be greater than zero.");
+        }
     }
 
     private void validateNoScheduleConflict(Long auditoriumId, LocalDateTime startTime, LocalDateTime endTime, Long excludeShowtimeId) {

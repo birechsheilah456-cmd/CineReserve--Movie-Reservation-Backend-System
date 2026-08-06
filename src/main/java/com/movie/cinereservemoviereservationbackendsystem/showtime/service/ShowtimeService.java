@@ -21,4 +21,6 @@ public interface ShowtimeService {
     ShowtimeAvailabilityResponse getShowtimesByDate(LocalDate date);
 
     List<ShowtimeResponse> getUpcomingShowtimesForMovie(Long movieId);
+
+    List<ShowtimeResponse> getAllShowtimes();
 }

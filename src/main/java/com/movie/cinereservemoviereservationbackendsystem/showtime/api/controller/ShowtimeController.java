@@ -4,7 +4,6 @@ import com.movie.cinereservemoviereservationbackendsystem.showtime.api.dto.Showt
 import com.movie.cinereservemoviereservationbackendsystem.showtime.api.dto.ShowtimeRequest;
 import com.movie.cinereservemoviereservationbackendsystem.showtime.api.dto.ShowtimeResponse;
 import com.movie.cinereservemoviereservationbackendsystem.showtime.service.ShowtimeService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -30,7 +29,7 @@ public class ShowtimeController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'CINEMA_MANAGER')")
-    public ResponseEntity<ShowtimeResponse> updateShowtime(@PathVariable Long id, @Valid @RequestBody ShowtimeRequest request) {
+    public ResponseEntity<ShowtimeResponse> updateShowtime(@PathVariable Long id, @RequestBody ShowtimeRequest request) {
         return ResponseEntity.ok(showtimeService.updateShowtime(id, request));
     }
 
@@ -44,6 +43,11 @@ public class ShowtimeController {
     @GetMapping("/{id}")
     public ResponseEntity<ShowtimeResponse> getShowtimeById(@PathVariable Long id) {
         return ResponseEntity.ok(showtimeService.getShowtimeById(id));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ShowtimeResponse>> getAllShowtimes() {
+        return ResponseEntity.ok(showtimeService.getAllShowtimes());
     }
 
     @GetMapping("/date")
